@@ -9,7 +9,6 @@ import numpy as np
 import pandas as pd
 from data_loading import loadData
 
-
 class clusterGenerator():
     
     def __init__(self, data, numbatches, num_clusters, multimodal=True, mix_type='gaussian'):
@@ -18,11 +17,13 @@ class clusterGenerator():
         assert(type(numbatches) == int)
         assert(type(num_clusters) == int)
         
+                
         self.numbatches = numbatches
         self.num_clusters = num_clusters
         self.multimodal = multimodal
         self.mixtype = mix_type
         
+      
         self.train_x = self.toDataFrame(data[0])
         self.train_y = self.toDataFrame(data[1])
         self.val_x = self.toDataFrame(data[2])
@@ -31,32 +32,34 @@ class clusterGenerator():
         self.test_y = self.toDataFrame(data[5])
         self.uniques = self.toDataFrame(data[6])
 
+        if self.mixtype == "class":
+            self.num_clusters = len(self.uniques)
 
     @staticmethod
     def toDataFrame(array):
         return pd.DataFrame(array)
 
 
-    def createClusters(self, mix_type):
+    def createClusters(self):
         
-        assert(mix_type.lower() in ('gaussian', 'k-means', 'class'))
+        assert(self.mixtype.lower() in ('gaussian', 'k-means', 'class'))
         
-        if mix_type.lower() == 'gaussian':
+        if self.mixtype.lower() == 'gaussian':
             from sklearn.mixture import GaussianMixture
             gm = GaussianMixture(n_components = self.num_clusters, covariance_type='full', n_init=100)
             predictions = gm.fit_predict(self.train_x)
             return predictions
-        if mix_type.lower() == 'k-means':
+        if self.mixtype.lower() == 'k-means':
             from sklearn.cluster import KMeans
             km = KMeans(n_clusters = self.num_clusters, n_init=100)
             predictions = km.fit_predict(self.train_x)
             return predictions
-        if mix_type.lower() == 'class':
-            return np.argmax(self.train_y, axis=1)
+        if self.mixtype.lower() == 'class':
+            return np.argmax(np.array(self.train_y), axis=1)
         
         
     def separateClusters(self):
-        cl = pd.DataFrame(self.createClusters(self.mixtype))
+        cl = pd.DataFrame(self.createClusters())
         batches = dict()
         outs = dict()
         for i in range(self.num_clusters):

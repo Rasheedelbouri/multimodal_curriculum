@@ -5,6 +5,7 @@ Created on Tue Dec  8 18:21:38 2020
 @author: rashe
 """
 from sklearn.datasets import load_iris, load_digits, load_boston, load_breast_cancer, load_diabetes
+from keras_network import generateTrainingData
 import pandas as pd
 
 
@@ -12,6 +13,16 @@ def loadData(dataset):
     
     if not isinstance(dataset, str):
         raise("input a valid argument")
+    
+    if dataset.lower() == "h" or dataset.lower() == "o":
+        gtd = generateTrainingData(source=dataset,red_feat=True,balanced_class=False, greyout=True)
+        train_x, train_y, val_x, val_y, test_x, test_y, uniques = gtd.getDataSplit()
+        encoder,_ = gtd.encodedInputs(train_x, val_x)
+        train_x = pd.DataFrame(encoder.predict(train_x))
+        val_x = pd.DataFrame(encoder.predict(val_x))
+        test_x = pd.DataFrame(encoder.predict(test_x))
+        
+        return train_x, train_y, val_x, val_y, test_x, test_y, uniques
     
     if dataset.lower() == 'iris':
         func = load_iris

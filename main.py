@@ -8,6 +8,11 @@ Created on Tue Dec  8 18:23:50 2020
 from clustering import clusterGenerator
 from data_loading import loadData
 from curricula import curriculum
+from train import trainingRoutine
+from utils import str2bool
+import argparse
+from pathlib import Path
+import os
 
 class generateCurriculum():
     
@@ -64,8 +69,50 @@ class generateCurriculum():
         
 if __name__ == "__main__":
     
-    data = loadData('digits') 
-    cg = clusterGenerator(data,10, 3, multimodal=True, mix_type='gaussian') 
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--curricType", type=str, 
+                        help='Which curriculum')    
+    parser.add_argument("--curricBatches", type=int, 
+                        help='Number of curriculum batches')
+    parser.add_argument("--numClusters", type=int, 
+                        help='Number of clusters')
+    parser.add_argument("--mixType", type=str, 
+                        help='What clustering metric')
+    parser.add_argument("--depthFirst", type=str2bool, 
+                        help='Order of training')
+    
+    args = parser.parse_args()
+    curricType = args.curricType
+    curricBatches = args.curricBatches
+    numClusters = args.numClusters
+    mixType=args.mixType
+    depthFirst = args.depthFirst
+    
+    multiModal = True
+    reverse = False
+    cumulative = True
+    forward = True
+    
+    
+
+    data = loadData('H') 
+    cg = clusterGenerator(data,curricBatches,numClusters,multimodal=multiModal,mix_type=mixType) 
     b,o = cg.separateClusters() 
-    gcu = generateCurriculum(b,o,curric_type='m',numbatches=10,reverse=False)
-    curric_batches, curric_outs = gcu.createBatches(cumulative=True, forward=True)
+    gcu = generateCurriculum(b,o,curric_type=curricType,numbatches=curricBatches,reverse=reverse)
+    curric_batches, curric_outs = gcu.createBatches(cumulative=cumulative, forward=forward)
+    tr = trainingRoutine(curric_batches, curric_outs, depthFirst=depthFirst)
+    
+    valAccs =  tr.trainNetwork(data[0], data[2], data[3], data[6])
+    
+    save_path = "../500rep_results/"+str(curricType)+"/"+str(mixType)
+    
+    if not os.path.exists(save_path):
+        Path(save_path).mkdir(parents=True, exist_ok=True)
+
+    
+    with  open(os.path.join(save_path, 
+               "curbatch"+str(curricBatches)+
+               "numclust"+str(numClusters)+
+               "depthFirst"+str(depthFirst)+".txt"), "w") as output:
+        output.write(str(valAccs))
+    output.close()
