@@ -1,9 +1,9 @@
 #!/bin/bash
 
-TYPES=("m" "c" "w")
-VALS=(10 5 3)
-MIX=("gaussian" "k-means" "class")
-BOOLS=("False" "True")
+TYPES=("m", "c", "w")
+VALS=(1, 3, 5, 7)
+MIX=("gaussian", "k-means", "class")
+BOOLS=("False", "True")
 
 for ctype in "${TYPES[@]}"
 do
@@ -15,7 +15,7 @@ do
             do 
                 for depth in "${BOOLS[@]}"
                 do
-                    python3 main.py --curricType="${ctype}" --curricBatches="${batch}" --numClusters="${cluster}" --mixType="${mix}" --depthFirst="${depth}"
+                    python main.py --curricType="${ctype}" --curricBatches="${batch}" --numClusters="${cluster}" --mixType="${mix}" --depthFirst="${depth}"
                 done
             done
         done
